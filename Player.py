@@ -10,6 +10,8 @@ class Character(pygame.sprite.Sprite):
         self.ammo = ammo
         self.start_ammo = ammo
         self.shoot_cooldown = 0
+        self.health = 100
+        self.max_health = self.health
         self.direction = 1
         self.vel_y = 0
         self.jump = False
@@ -20,7 +22,7 @@ class Character(pygame.sprite.Sprite):
         self.action = 0
         self.update_time = pygame.time.get_ticks()
         
-        animation_types = ['Idle', 'Jump', 'Walk']
+        animation_types = ['Idle', 'Jump', 'Walk','Die']
         for animation in animation_types:
             temp_list = []
             num_of_file = len(os.listdir(f'Asset/{self.char_type}/{animation}'))
@@ -36,9 +38,10 @@ class Character(pygame.sprite.Sprite):
         
     def update(self):
         self.update_animation()
+        self.check_alive()
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -=1
-            
+                
     def move(self, move_left, move_right, gravity):
         dx = 0
         dy = 0
@@ -73,9 +76,16 @@ class Character(pygame.sprite.Sprite):
         from Bullet import Rock
         if self.shoot_cooldown == 0 and self.ammo > 0:
             self.shoot_cooldown = 50
-            bullet = Rock(self.rect.centerx + (0.15 * self.rect.size[0] * self.direction), self.rect.centery, self.direction, rock_img)
+            bullet = Rock(self.rect.centerx + (0.3 * self.rect.size[0] * self.direction), self.rect.centery, self.direction, rock_img)
             bullet_group.add(bullet)
             self.ammo -=1
+            
+    def check_alive(self):
+        if self.health <= 0:
+            self.health = 0
+            self.speed = 0
+            self.alive = False
+            self.update_action(3)
             
     def update_animation(self):
         ANIMATION_COOLDOWN = 100
@@ -84,7 +94,10 @@ class Character(pygame.sprite.Sprite):
             self.update_time = pygame.time.get_ticks()
             self.frame_index+=1
         if self.frame_index >= len(self.animation_list[self.action]):
-            self.frame_index = 0
+            if self.action == 3:
+                self.frame_index = len(self.animation_list[self.action])-1
+            else:
+                self.frame_index = 0
             
     def update_action(self, new_action):
         if new_action != self.action:

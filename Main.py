@@ -1,6 +1,7 @@
 import pygame
 from Player import Character
 from Bullet import Rock
+from ItemBox import itembox
 
 pygame.init()
 
@@ -17,16 +18,47 @@ clock = pygame.time.Clock()
 FPS = 60 
 
 GRAVITY = 0.75
+TILE_SIZE = 16
 
 BG = (255, 153, 255)
 BLACK = (50, 50, 50)
+
+
+font = pygame.font.SysFont('Minecraft', 30)
+
+def draw_text(text, font, text_col, x, y):
+	img = font.render(text, True, text_col)
+	screen.blit(img, (x, y))
+
 def draw_BG():
     screen.fill(BG)
     pygame.draw.line(screen, BLACK, (0, 500), (SCREEN_WIDTH, 500))
-player = Character('Player', 200, 0, 4, 2, 3)
-enemy = Character('Player', 400, 450, 4, 2, 30)
+
+player = Character('Player', 200, 0, 4, 2, 10)
+
 rock_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
+enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
+item_box_group = pygame.sprite.Group()
+
+health_box_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
+rock_box_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
+
+item_boxes = {
+    'Health'    : health_box_img,
+    'Rock'      : rock_box_img
+}
+
+item_box = itembox('Health', 100, 300, item_boxes, TILE_SIZE)
+item_box_group.add(item_box)
+item_box =  itembox('Rock', 400, 300, item_boxes, TILE_SIZE)
+item_box_group.add(item_box)
+
+enemy1 = Character('Player', 400, 450, 4, 2, 30)
+enemy2 = Character('Player', 300, 400, 4, 2, 30)
+enemy_group.add(enemy1)
+enemy_group.add(enemy2)
+
 
 run = True
 while run:
@@ -36,10 +68,16 @@ while run:
     draw_BG()
     player.update()
     player.draw(screen)
-    enemy.draw(screen)
     
-    bullet_group.update(SCREEN_WIDTH)
+    for enemy in enemy_group:
+        enemy.update()
+        enemy.draw(screen)
+    
+    bullet_group.update(SCREEN_WIDTH, player, enemy, bullet_group, enemy_group)
+    item_box_group.update()
     bullet_group.draw(screen)
+    item_box_group.draw(screen)
+    
     if player.alive:
         if shoot:
             player.shoot(bullet_group, rock_img)
