@@ -24,7 +24,12 @@ BG = (255, 153, 255)
 BLACK = (50, 50, 50)
 
 
-font = pygame.font.SysFont('Minecraft', 30)
+def scale(scale, pic_path):
+    img = pygame.image.load(pic_path).convert_alpha()
+    img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
+    return img
+
+font = pygame.font.SysFont('Minecraft', 24)
 
 def draw_text(text, font, text_col, x, y):
 	img = font.render(text, True, text_col)
@@ -37,21 +42,22 @@ def draw_BG():
 player = Character('Player', 200, 0, 4, 2, 10)
 
 rock_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
+heart_img = pygame.image.load('Asset/Icons/Heart.png').convert_alpha()
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 item_box_group = pygame.sprite.Group()
 
-health_box_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
-rock_box_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
+health_box_img = pygame.image.load('Asset/Icons/Heartbox.png').convert_alpha()
+rock_box_img = pygame.image.load('Asset/Icons/Rockbox.png').convert_alpha()
 
 item_boxes = {
     'Health'    : health_box_img,
     'Rock'      : rock_box_img
 }
 
-item_box = itembox('Health', 100, 300, item_boxes, TILE_SIZE)
+item_box = itembox('Health', 100, 500-16, item_boxes, TILE_SIZE)
 item_box_group.add(item_box)
-item_box =  itembox('Rock', 400, 300, item_boxes, TILE_SIZE)
+item_box =  itembox('Rock', 400, 500-16, item_boxes, TILE_SIZE)
 item_box_group.add(item_box)
 
 enemy1 = Character('Player', 400, 450, 4, 2, 30)
@@ -66,6 +72,11 @@ while run:
     clock.tick(FPS)
     
     draw_BG()
+    
+    draw_text(f'AMMO: {player.ammo}', font, BLACK, 600, 10)
+    draw_text(f'HP: {player.health}', font, BLACK, 600, 30)
+    for x in range(player.health):
+        screen.blit(heart_img, (90 + (x*10), 40))
     player.update()
     player.draw(screen)
     
@@ -74,7 +85,7 @@ while run:
         enemy.draw(screen)
     
     bullet_group.update(SCREEN_WIDTH, player, enemy, bullet_group, enemy_group)
-    item_box_group.update()
+    item_box_group.update(player)
     bullet_group.draw(screen)
     item_box_group.draw(screen)
     
