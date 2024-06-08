@@ -1,33 +1,55 @@
-from Tiles import *
-from SpriteSheet import Spritesheet
+import pygame
+from Player import Character
 
 pygame.init()
-DISPLAY_W = 800
-DISPLAY_H = int(DISPLAY_W*0.6)
-canvas = pygame.Surface((DISPLAY_W,DISPLAY_H))
-window = pygame.display.set_mode(((DISPLAY_W,DISPLAY_H)))
+
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
+move_left, move_right = False, False
+
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Niggas in Jungle: 2nd Semester Edition')
 
-x = 200
-y = 200
-scale = 3
-img = pygame.image.load('Asset/Walking_Test.png')
-img = pygame.transform.scale(img, (int(img.get_width()*scale), int(img.get_height()*scale)))
-rect = img.get_rect()
-rect.center = (x,y)
-
 clock = pygame.time.Clock()
+FPS = 60 
+BG = (255, 153, 255)
+def draw_BG():
+    screen.fill(BG)
+player = Character('Player', 200, 400, 10, 5)
 
-running = True
-while running:
+run = True
+while run:
     
-    window.blit(img, rect)
-    clock.tick(60)
+    clock.tick(FPS)
+    
+    draw_BG()
+    player.update_animation()
+    player.draw(screen)
+    
+    if move_left or move_right:
+        player.update_action(1)
+    else:
+        player.update_action(0)
+    player.move(move_left, move_right)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            run = False
         if event.type == pygame.KEYDOWN:
-            pass
+            if event.key == pygame.K_a:
+                move_left = True
+            if event.key == pygame.K_d:
+                move_right = True
+            if event.key == pygame.K_ESCAPE:
+                run = False
         
-        
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_a:
+                move_left = False
+            if event.key == pygame.K_d:
+                move_right = False
+
     pygame.display.update()
+
+pygame.quit()
