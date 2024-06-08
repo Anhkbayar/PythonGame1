@@ -3,9 +3,12 @@ import pygame
 class Character(pygame.sprite.Sprite):
     def __init__(self,char_type, x, y, scale, speed):
         pygame.sprite.Sprite.__init__(self)
+        self.alive = True
         self.char_type =char_type
         self.speed = speed
         self.direction = 1
+        self.vel_y = 0
+        self.jump = False
         self.flip = False
         self.animation_list = []
         self.frame_index = 0
@@ -22,10 +25,11 @@ class Character(pygame.sprite.Sprite):
             img = pygame.image.load(f'Asset/{self.char_type}/Walk/{i}.png')
             img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
             temp_list.append(img)
+        self.animation_list.append(temp_list)
         self.image = self.animation_list[self.action][self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-    def move(self, move_left, move_right):
+    def move(self, move_left, move_right, gravity):
         dx = 0
         dy = 0
         if move_left:
@@ -36,7 +40,13 @@ class Character(pygame.sprite.Sprite):
             dx = self.speed
             self.flip = False
             self.direction = 1
+        if self.jump == True:
+            self.vel_y = -11
+            self.jump = False
         
+        self.vel_y += gravity   
+        dy +=self.vel_y        
+       
         self.rect.x += dx
         self.rect.y += dy
     def update_animation(self):
