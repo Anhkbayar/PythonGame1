@@ -1,11 +1,13 @@
 import pygame
 import csv
 from World import world
+from Button import Button
 
 pygame.init()
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
+start_game = False
 move_left, move_right = False, False
 shoot = False
 
@@ -24,13 +26,17 @@ COLS = 150
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPE = 18
 level = 1
-start_game = False
+
+
+start_img = pygame.image.load('Asset/Menu/Start.png')
+exit_img = pygame.image.load('Asset/Menu/Exit.png')
 
 BG = (255, 153, 255)
 GREY = (50, 50, 50)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
+FOREST = (20,60,10)
 
 pine1_img = pygame.image.load('Asset/Background/pine1.png')
 pine2_img = pygame.image.load('Asset/Background/pine2.png')
@@ -68,6 +74,9 @@ item_boxes = {
     'Rock'      : rock_box_img
 }
 
+start_button = Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 5)
+exit_button = Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, exit_img, 5)
+
 rock_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
 heart_img = pygame.image.load('Asset/Icons/Heart.png').convert_alpha()
 enemy_group = pygame.sprite.Group()
@@ -97,26 +106,28 @@ while run:
     clock.tick(FPS)
     
     if start_game == False:
-        
-        pass
+        screen.fill(FOREST)
+        if start_button.draw(screen):
+            start_game = True
+        if exit_button.draw(screen):
+            run = False
     else:
-    
         draw_bg()
-        
+            
         Environment.draw(screen, screen_scroll)
-        
+            
         health_bar.draw(player.health, screen)
-        
+            
         draw_text(f'AMMO: {player.ammo}', font, BLACK, SCREEN_WIDTH-120, 10)
-    
+        
         player.update()
         player.draw(screen)
-        
+            
         for enemy in enemy_group:
             enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len)
             enemy.update()
             enemy.draw(screen)
-        
+            
         bullet_group.update(SCREEN_WIDTH, player, bullet_group, enemy_group, Environment.obstacle_list,screen_scroll)
         item_box_group.update(player, screen_scroll)
         exit_group.update(screen_scroll)
@@ -127,7 +138,7 @@ while run:
         exit_group.draw(screen)
         decs_group.draw(screen)
         spike_group.draw(screen)
-        
+            
         if player.alive:
             if shoot:
                 player.shoot(bullet_group, rock_img)
@@ -139,31 +150,31 @@ while run:
                 player.update_action(0)
             screen_scroll = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len, TILE_SIZE)
             bg_scroll -= screen_scroll
-            
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_a:
-                    move_left = True
-                if event.key == pygame.K_d:
-                    move_right = True
-                if event.key == pygame.K_SPACE and player.alive:
-                    shoot = True
-                if event.key == pygame.K_w and player.alive:
-                    player.jump = True
-                if event.key == pygame.K_ESCAPE:
-                    run = False
                 
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+                run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_a:
+                move_left = True
+            if event.key == pygame.K_d:
+                move_right = True
+            if event.key == pygame.K_SPACE and player.alive:
+                shoot = True
+            if event.key == pygame.K_w and player.alive:
+                player.jump = True
+            if event.key == pygame.K_ESCAPE:
+                run = False
                     
-            
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_a:
-                    move_left = False
-                if event.key == pygame.K_d:
-                    move_right = False
-                if event.key == pygame.K_SPACE:
-                    shoot = False
+                        
+                
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_a:
+                move_left = False
+            if event.key == pygame.K_d:
+                move_right = False
+            if event.key == pygame.K_SPACE:
+                shoot = False
 
     pygame.display.update()
 
