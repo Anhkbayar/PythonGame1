@@ -9,11 +9,15 @@ class Rock(pygame.sprite.Sprite):
         self.rect.center =  (x,y)
         self.direction = direction
     
-    def update(self, Width, player, enemy, bullet_group, enemy_group):
+    def update(self, Width, player, bullet_group, enemy_group, obstacle_group):
         self.rect.x += (self.direction * self.speed) 
         
         if self.rect.right < 0 or self.rect.left > Width:
             self.kill()
+            
+        for tile in obstacle_group:
+            if tile[1].colliderect(self.rect):
+                self.kill()
         for enemy in enemy_group:
             if pygame.sprite.spritecollide(enemy, bullet_group, False):
                 if enemy.alive:

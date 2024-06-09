@@ -18,3 +18,24 @@ class itembox(pygame.sprite.Sprite):
                 player.ammo += 5
             
             self.kill()
+
+class decoration(pygame.sprite.Sprite):
+    def __init__(self, img, x, y, tilesize):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = img
+        self.rect = self.image.get_rect()
+        self.rect.midtop = (x + tilesize // 2, y + (tilesize-self.image.get_height()))
+
+class spike(pygame.sprite.Sprite):
+    def __init__(self, img, x, y, tilesize):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = img
+        self.rect = self.image.get_rect()
+        self.rect.midtop = (x + tilesize // 2, y + (tilesize-self.image.get_height()))
+
+class exit(pygame.sprite.Sprite):
+    def __init__(self, img, x, y, tilesize):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = img
+        self.rect = self.image.get_rect()
+        self.rect.midtop = (x + tilesize // 2, y + (tilesize-self.image.get_height()))
