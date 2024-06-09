@@ -9,8 +9,8 @@ class Rock(pygame.sprite.Sprite):
         self.rect.center =  (x,y)
         self.direction = direction
     
-    def update(self, Width, player, bullet_group, enemy_group, obstacle_group):
-        self.rect.x += (self.direction * self.speed) 
+    def update(self, Width, player, bullet_group, enemy_group, obstacle_group, screen_scroll):
+        self.rect.x += (self.direction * self.speed) + screen_scroll
         
         if self.rect.right < 0 or self.rect.left > Width:
             self.kill()

@@ -7,6 +7,7 @@ class world():
         self.obstacle_list = []
         
     def process_data(self, data, img_list, tilesize, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group):
+        self.level_len = len(data[0])
         for y, row in enumerate(data):
             for x, tile in enumerate(row):
                 if tile >= 0:
@@ -41,6 +42,7 @@ class world():
     
         return player, health_bar
     
-    def draw(self, screen):
+    def draw(self, screen, screen_scroll):
         for tile in self.obstacle_list:
+            tile[1][0] += screen_scroll
             screen.blit(tile[0], tile[1])

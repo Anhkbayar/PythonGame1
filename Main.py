@@ -6,20 +6,20 @@ pygame.init()
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
-SCROLL_THRESH = 200
 move_left, move_right = False, False
 shoot = False
-screen_scroll = 0
-bg_scroll = 0
 
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Niggas in Jungle: 2nd Semester Edition')
+pygame.display.set_caption('Niggas in Forest: 2nd Semester Edition')
 
 clock = pygame.time.Clock()
 FPS = 60
 
 GRAVITY = 0.75
+SCROLL_THRESH = 200
+screen_scroll = 0
+bg_scroll = 0
 ROWS = 40
 COLS = 150
 TILE_SIZE = SCREEN_HEIGHT // ROWS
@@ -55,10 +55,12 @@ def draw_text(text, font, text_col, x, y):
 
 def draw_bg():
     screen.fill(GREY)
-    screen.blit(sky_img, (0, 0))
-    screen.blit(mount_img, (0, SCREEN_HEIGHT - mount_img.get_height()-300))
-    screen.blit(pine1_img, (0, SCREEN_HEIGHT - pine1_img.get_height()-140))
-    screen.blit(pine2_img, (0, SCREEN_HEIGHT - pine2_img.get_height()))
+    width = sky_img.get_width()
+    for x in range(5):
+        screen.blit(sky_img, ((x*width) - bg_scroll * 0.5, 0))
+        screen.blit(mount_img, ((x*width) - bg_scroll * 0.6, SCREEN_HEIGHT - mount_img.get_height()-300))
+        screen.blit(pine1_img, ((x*width) - bg_scroll*0.7, SCREEN_HEIGHT - pine1_img.get_height()-140))
+        screen.blit(pine2_img, ((x*width) - bg_scroll*0.8, SCREEN_HEIGHT - pine2_img.get_height()))
     
 
 
@@ -106,7 +108,7 @@ while run:
     
     draw_bg()
     
-    Environment.draw(screen)
+    Environment.draw(screen, screen_scroll)
     
     health_bar.draw(player.health, screen)
     
@@ -116,15 +118,15 @@ while run:
     player.draw(screen)
     
     for enemy in enemy_group:
-        enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll)
+        enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len)
         enemy.update()
         enemy.draw(screen)
     
-    bullet_group.update(SCREEN_WIDTH, player, bullet_group, enemy_group, Environment.obstacle_list)
-    item_box_group.update(player)
-    exit_group.update()
-    decs_group.update()
-    spike_group.update()
+    bullet_group.update(SCREEN_WIDTH, player, bullet_group, enemy_group, Environment.obstacle_list,screen_scroll)
+    item_box_group.update(player, screen_scroll)
+    exit_group.update(screen_scroll)
+    decs_group.update(screen_scroll)
+    spike_group.update(screen_scroll)
     bullet_group.draw(screen)
     item_box_group.draw(screen)
     exit_group.draw(screen)
@@ -140,8 +142,9 @@ while run:
             player.update_action(2)
         else:
             player.update_action(0)
-        screen_scroll = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll)
-
+        screen_scroll = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len, TILE_SIZE)
+        bg_scroll -= screen_scroll
+        
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False

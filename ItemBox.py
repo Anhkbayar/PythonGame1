@@ -8,7 +8,8 @@ class itembox(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
         
-    def update(self, player):
+    def update(self, player, screen_scroll):
+        self.rect.x += screen_scroll
         if pygame.sprite.collide_rect(self, player):
             if self.item_type == 'Health':
                 player.health += 25
@@ -25,6 +26,9 @@ class decoration(pygame.sprite.Sprite):
         self.image = img
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + tilesize // 2, y + (tilesize-self.image.get_height()))
+    def update(self, screen_scroll):
+        self.rect.x +=screen_scroll
+        
 
 class spike(pygame.sprite.Sprite):
     def __init__(self, img, x, y, tilesize):
@@ -32,10 +36,13 @@ class spike(pygame.sprite.Sprite):
         self.image = img
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + tilesize // 2, y + (tilesize-self.image.get_height()))
-
+    def update(self, screen_scroll):
+        self.rect.x +=screen_scroll
 class exit(pygame.sprite.Sprite):
     def __init__(self, img, x, y, tilesize):
         pygame.sprite.Sprite.__init__(self)
         self.image = img
         self.rect = self.image.get_rect()
         self.rect.midtop = (x + tilesize // 2, y + (tilesize-self.image.get_height()))
+    def update(self, screen_scroll):
+        self.rect.x +=screen_scroll

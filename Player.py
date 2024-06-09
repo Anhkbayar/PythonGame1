@@ -54,7 +54,7 @@ class Character(pygame.sprite.Sprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, move_left, move_right, gravity, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll):
+    def move(self, move_left, move_right, gravity, obstacle_list, S_W, Scroll_Thres, Scren_Scroll, bg_scroll, level_len, tilesize):
         dx = 0
         dy = 0
         if move_left:
@@ -78,6 +78,9 @@ class Character(pygame.sprite.Sprite):
         for tile in obstacle_list:
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx = 0
+                if self.char_type == 'Enemy':
+                    self.direction *= -1
+                    self.move_counter = 0
             if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
                 if self.vel_y < 0:
                     self.vel_y = 0
@@ -86,16 +89,21 @@ class Character(pygame.sprite.Sprite):
                     self.vel_y = 0
                     self.in_air = False
                     dy = tile[1].top - self.rect.bottom
+        
+        if self.char_type == 'Player':
+            if self.rect.left + dx < 0 or self.rect.right + dx > S_W:
+                dx = 0
 
         self.rect.x += dx
         self.rect.y += dy
 
         if self.char_type == 'Player':
-            if self.rect.right > S_W - Scroll_Thres or self.rect.left < Scroll_Thres:
+            if (self.rect.right > S_W - Scroll_Thres and bg_scroll < (level_len * tilesize) - S_W)\
+				or (self.rect.left < Scroll_Thres and bg_scroll > abs(dx)):
                 self.rect.x -= dx
                 Scren_Scroll = -dx
 
-        return Scren_Scroll
+            return Scren_Scroll
 
     def shoot(self, bullet_group, rock_img):
         from Bullet import Rock
@@ -113,7 +121,7 @@ class Character(pygame.sprite.Sprite):
             self.alive = False
             self.update_action(3)
 
-    def ai(self, player, tilesize, gravity, bullet_group, bullet_img, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll):
+    def ai(self, player, tilesize, gravity, bullet_group, bullet_img, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, level_len):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
                 self.update_action(0)
@@ -131,7 +139,7 @@ class Character(pygame.sprite.Sprite):
                         ai_move_right = False
                     ai_move_left = not ai_move_right
                     self.move(ai_move_left, ai_move_right, gravity,
-                              obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll)
+                              obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, level_len, tilesize)
                     self.update_action(2)
                     self.move_counter += 1
 
@@ -145,6 +153,8 @@ class Character(pygame.sprite.Sprite):
                     self.idling_counter -= 1
                     if self.idling_counter <= 0:
                         self.idling = False
+
+        self.rect.x += Scren_Scroll
 
     def update_animation(self):
         ANIMATION_COOLDOWN = 100
