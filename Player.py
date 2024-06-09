@@ -54,7 +54,7 @@ class Character(pygame.sprite.Sprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, move_left, move_right, gravity, obstacle_list, S_W, Scroll_Thres, Scren_Scroll, bg_scroll, level_len, tilesize):
+    def move(self, move_left, move_right, gravity, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, bg_scroll, level_len, tilesize, spike_group):
         dx = 0
         dy = 0
         if move_left:
@@ -90,6 +90,12 @@ class Character(pygame.sprite.Sprite):
                     self.in_air = False
                     dy = tile[1].top - self.rect.bottom
         
+        if pygame.sprite.spritecollide(self, spike_group, False):
+            self.health = 0
+        
+        if self.rect.bottom  > S_H:
+            self.health = 0
+        
         if self.char_type == 'Player':
             if self.rect.left + dx < 0 or self.rect.right + dx > S_W:
                 dx = 0
@@ -121,7 +127,7 @@ class Character(pygame.sprite.Sprite):
             self.alive = False
             self.update_action(3)
 
-    def ai(self, player, tilesize, gravity, bullet_group, bullet_img, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, level_len):
+    def ai(self, player, tilesize, gravity, bullet_group, bullet_img, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, level_len, spike_group, bg_scroll):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
                 self.update_action(0)
@@ -139,7 +145,7 @@ class Character(pygame.sprite.Sprite):
                         ai_move_right = False
                     ai_move_left = not ai_move_right
                     self.move(ai_move_left, ai_move_right, gravity,
-                              obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, level_len, tilesize)
+                              obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll,bg_scroll, level_len, tilesize, spike_group)
                     self.update_action(2)
                     self.move_counter += 1
 

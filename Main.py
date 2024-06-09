@@ -30,6 +30,7 @@ level = 1
 
 start_img = pygame.image.load('Asset/Menu/Start.png')
 exit_img = pygame.image.load('Asset/Menu/Exit.png')
+restart_img = pygame.image.load('Asset/Menu/Restart.png')
 
 BG = (255, 153, 255)
 GREY = (50, 50, 50)
@@ -58,6 +59,20 @@ def draw_bg():
         screen.blit(pine1_img, ((x*width) - bg_scroll*0.7, SCREEN_HEIGHT - pine1_img.get_height()-140))
         screen.blit(pine2_img, ((x*width) - bg_scroll*0.8, SCREEN_HEIGHT - pine2_img.get_height()))
     
+def reset_level():
+    enemy_group.empty()
+    bullet_group.empty()
+    item_box_group.empty()
+    decs_group.empty()
+    spike_group.empty()
+    exit_group.empty()
+
+    data = []
+    for row in range(ROWS):
+        r = [-1] * COLS
+        data.append(r)
+
+    return data
 
 
 img_list = []
@@ -76,6 +91,7 @@ item_boxes = {
 
 start_button = Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 5)
 exit_button = Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, exit_img, 5)
+restart_button = Button(SCREEN_WIDTH // 2 - 110 , SCREEN_HEIGHT // 2 , restart_img, 3)
 
 rock_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
 heart_img = pygame.image.load('Asset/Icons/Heart.png').convert_alpha()
@@ -96,6 +112,7 @@ with open(f'Levels/level{level}_data.csv', newline='') as csvfile:
     for x, row in enumerate(reader):
         for y, tile in enumerate(row):
             world_data[x][y] = int(tile)
+
 Environment = world()
 player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group)          
 
@@ -124,7 +141,7 @@ while run:
         player.draw(screen)
             
         for enemy in enemy_group:
-            enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len)
+            enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len, spike_group, bg_scroll)
             enemy.update()
             enemy.draw(screen)
             
@@ -148,9 +165,22 @@ while run:
                 player.update_action(2)
             else:
                 player.update_action(0)
-            screen_scroll = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len, TILE_SIZE)
+            screen_scroll = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, bg_scroll, Environment.level_len, TILE_SIZE, spike_group)
             bg_scroll -= screen_scroll
-                
+        else:
+            screen_scroll = 0
+            if restart_button.draw(screen):
+                bg_scroll = 0
+                world_data = reset_level() 
+                with open(f'Levels/level{level}_data.csv', newline='') as csvfile:
+                    reader = csv.reader(csvfile, delimiter = ',')
+                    for x, row in enumerate(reader):
+                        for y, tile in enumerate(row):
+                            world_data[x][y] = int(tile)
+
+                Environment = world()
+                player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group)          
+                    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
                 run = False
