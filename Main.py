@@ -25,6 +25,7 @@ ROWS = 40
 COLS = 150
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPE = 18
+MAX_LEVELS = 4
 level = 1
 
 
@@ -141,7 +142,7 @@ while run:
         player.draw(screen)
             
         for enemy in enemy_group:
-            enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len, spike_group, bg_scroll)
+            enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len, spike_group, bg_scroll, exit_group)
             enemy.update()
             enemy.draw(screen)
             
@@ -165,8 +166,22 @@ while run:
                 player.update_action(2)
             else:
                 player.update_action(0)
-            screen_scroll = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, bg_scroll, Environment.level_len, TILE_SIZE, spike_group)
+            screen_scroll, level_complete = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, bg_scroll, Environment.level_len, TILE_SIZE, spike_group, exit_group)
             bg_scroll -= screen_scroll
+            if level_complete:
+                level+=1
+                bg_scroll = 0
+                world_data = reset_level()
+                if level <= MAX_LEVELS:
+                    with open(f'Levels/level{level}_data.csv', newline='') as csvfile:
+                        reader = csv.reader(csvfile, delimiter = ',')
+                        for x, row in enumerate(reader):
+                            for y, tile in enumerate(row):
+                                world_data[x][y] = int(tile)
+
+                Environment = world()
+                player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group) 
+            
         else:
             screen_scroll = 0
             if restart_button.draw(screen):
