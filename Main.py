@@ -1,50 +1,73 @@
 import pygame
+from pygame import mixer
 import csv
 from World import world
 from Button import Button
+from ScreenFade import screenfade
 
+mixer.init()
 pygame.init()
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 start_game = False
+start_intro = False
 move_left, move_right = False, False
 shoot = False
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Niggas in Forest: 2nd Semester Edition')
+pygame.display.set_caption('People in Forest: 2nd Semester Edition')
 
 clock = pygame.time.Clock()
 FPS = 60
 
-GRAVITY = 0.75
-SCROLL_THRESH = 200
+GRAVITY = 0.555
+SCROLL_THRESH = 250
 screen_scroll = 0
 bg_scroll = 0
 ROWS = 40
-COLS = 150
+COLS = 200
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPE = 18
 MAX_LEVELS = 4
 level = 1
 
-
-start_img = pygame.image.load('Asset/Menu/Start.png')
-exit_img = pygame.image.load('Asset/Menu/Exit.png')
-restart_img = pygame.image.load('Asset/Menu/Restart.png')
-
+#Color
 BG = (255, 153, 255)
 GREY = (50, 50, 50)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 FOREST = (20,60,10)
-
+#Music
+pygame.mixer.music.load('Sound Effect/Main.wav')
+pygame.mixer.music.set_volume(0.4)
+pygame.mixer.music.play(-1, 0,4000)
+jump_fx = pygame.mixer.Sound('Sound Effect/Jump.wav')
+jump_fx.set_volume(0.3)
+collect_fx = pygame.mixer.Sound('Sound Effect/Collect.wav')
+collect_fx.set_volume(0.55)
+die_fx = pygame.mixer.Sound('Sound Effect/Death.wav')
+die_fx.set_volume(0.55)
+level_up_fx = pygame.mixer.Sound('Sound Effect/level_up.wav')
+level_up_fx.set_volume(0.55)
+game_over_fx = pygame.mixer.Sound('Sound Effect/Game_over.wav')
+game_over_fx.set_volume(0.55)
+throw_fx = pygame.mixer.Sound('Sound Effect/Throw.wav')
+throw_fx.set_volume(0.7)
+#Menu
+start_img = pygame.image.load('Asset/Menu/Start.png')
+exit_img = pygame.image.load('Asset/Menu/Exit.png')
+restart_img = pygame.image.load('Asset/Menu/Restart.png')
+#Trans
+intro_fade = screenfade(1, FOREST, 5)
+death_fade = screenfade(2, FOREST, 10)
+#Background
 pine1_img = pygame.image.load('Asset/Background/pine1.png')
 pine2_img = pygame.image.load('Asset/Background/pine2.png')
 mount_img = pygame.image.load('Asset/Background/mountain.png')
 sky_img = pygame.image.load('Asset/Background/sky_cloud.png')
-
+#Font
 font = pygame.font.SysFont('Minecraft', 24)
 
 def draw_text(text, font, text_col, x, y):
@@ -57,7 +80,7 @@ def draw_bg():
     for x in range(5):
         screen.blit(sky_img, ((x*width) - bg_scroll * 0.5, 0))
         screen.blit(mount_img, ((x*width) - bg_scroll * 0.6, SCREEN_HEIGHT - mount_img.get_height()-300))
-        screen.blit(pine1_img, ((x*width) - bg_scroll*0.7, SCREEN_HEIGHT - pine1_img.get_height()-140))
+        screen.blit(pine1_img, ((x*width) - bg_scroll*0.55, SCREEN_HEIGHT - pine1_img.get_height()-140))
         screen.blit(pine2_img, ((x*width) - bg_scroll*0.8, SCREEN_HEIGHT - pine2_img.get_height()))
     
 def reset_level():
@@ -75,11 +98,11 @@ def reset_level():
 
     return data
 
-
+SCALE = 1
 img_list = []
 for x in range(TILE_TYPE):
     img = pygame.image.load(f'Asset/Tiles/{x}.png')
-    img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
+    img = pygame.transform.scale(img, ((TILE_SIZE), (TILE_SIZE)))
     img_list.append(img)
 
 health_box_img = pygame.image.load('Asset/Icons/Heartbox.png').convert_alpha()
@@ -127,13 +150,12 @@ while run:
         screen.fill(FOREST)
         if start_button.draw(screen):
             start_game = True
+            start_intro = True
         if exit_button.draw(screen):
             run = False
     else:
-        draw_bg()
-            
-        Environment.draw(screen, screen_scroll)
-            
+        draw_bg()    
+        Environment.draw(screen, screen_scroll)    
         health_bar.draw(player.health, screen)
             
         draw_text(f'AMMO: {player.ammo}', font, BLACK, SCREEN_WIDTH-120, 10)
@@ -142,7 +164,7 @@ while run:
         player.draw(screen)
             
         for enemy in enemy_group:
-            enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len, spike_group, bg_scroll, exit_group)
+            enemy.ai(player, TILE_SIZE, GRAVITY, bullet_group, rock_img, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, Environment.level_len, spike_group, bg_scroll, exit_group, throw_fx)
             enemy.update()
             enemy.draw(screen)
             
@@ -156,10 +178,15 @@ while run:
         exit_group.draw(screen)
         decs_group.draw(screen)
         spike_group.draw(screen)
+        
+        if start_intro == True:
+            if intro_fade.fade(screen, SCREEN_WIDTH, SCREEN_HEIGHT):
+                start_intro == False
+                intro_fade.fade_count = 0
             
         if player.alive:
             if shoot:
-                player.shoot(bullet_group, rock_img)
+                player.shoot(bullet_group, rock_img, throw_fx)
             if player.in_air:
                 player.update_action(1)
             elif move_left or move_right:
@@ -169,6 +196,7 @@ while run:
             screen_scroll, level_complete = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, bg_scroll, Environment.level_len, TILE_SIZE, spike_group, exit_group)
             bg_scroll -= screen_scroll
             if level_complete:
+                start_intro =True
                 level+=1
                 bg_scroll = 0
                 world_data = reset_level()
@@ -184,17 +212,19 @@ while run:
             
         else:
             screen_scroll = 0
-            if restart_button.draw(screen):
-                bg_scroll = 0
-                world_data = reset_level() 
-                with open(f'Levels/level{level}_data.csv', newline='') as csvfile:
-                    reader = csv.reader(csvfile, delimiter = ',')
-                    for x, row in enumerate(reader):
-                        for y, tile in enumerate(row):
-                            world_data[x][y] = int(tile)
+            if death_fade.fade(screen, SCREEN_WIDTH, SCREEN_HEIGHT):
+                if restart_button.draw(screen):
+                    death_fade.fade_count = 0
+                    bg_scroll = 0
+                    world_data = reset_level() 
+                    with open(f'Levels/level{level}_data.csv', newline='') as csvfile:
+                        reader = csv.reader(csvfile, delimiter = ',')
+                        for x, row in enumerate(reader):
+                            for y, tile in enumerate(row):
+                                world_data[x][y] = int(tile)
 
-                Environment = world()
-                player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group)          
+                    Environment = world()
+                    player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group)          
                     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -208,6 +238,7 @@ while run:
                 shoot = True
             if event.key == pygame.K_w and player.alive:
                 player.jump = True
+                jump_fx.play()
             if event.key == pygame.K_ESCAPE:
                 run = False
                     

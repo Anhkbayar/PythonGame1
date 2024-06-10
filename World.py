@@ -17,10 +17,10 @@ class world():
                     img_rect.y = y * tilesize
                     tile_data = (img, img_rect)
                     if tile == 0:
-                        player = Character('Player', x*tilesize, y*tilesize, 2, 2, 10)
+                        player = Character('Player', x*tilesize, y*tilesize, 2, 4, 10)
                         health_bar = healthbar(10, 10, player.health, player.health )
                     elif tile == 1:
-                        enemy = Character('Enemy', x*tilesize, y*tilesize, 2, 1.9, 30)
+                        enemy = Character('Enemy', x*tilesize, y*tilesize, 2, 2, 30)
                         enemy_group.add(enemy)
                     elif tile >= 2 and tile <= 4:
                         decs = decoration(img, x*tilesize, y*tilesize, tilesize)

@@ -66,7 +66,7 @@ class Character(pygame.sprite.Sprite):
             self.flip = False
             self.direction = 1
         if self.jump == True and self.in_air == False:
-            self.vel_y = -11
+            self.vel_y = -8
             self.jump = False
             self.in_air = True
 
@@ -74,13 +74,15 @@ class Character(pygame.sprite.Sprite):
         if self.vel_y > 10:
             self.vel_y
         dy += self.vel_y
-
+        #Collision
         for tile in obstacle_list:
+            #x-axis
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx = 0
                 if self.char_type == 'Enemy':
                     self.direction *= -1
                     self.move_counter = 0
+            #y-axis
             if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
                 if self.vel_y < 0:
                     self.vel_y = 0
@@ -115,15 +117,17 @@ class Character(pygame.sprite.Sprite):
 
             return Scren_Scroll, level_complete
 
-    def shoot(self, bullet_group, rock_img):
+    def shoot(self, bullet_group, rock_img, throw_fx):
         from Bullet import Rock
+        from pygame import mixer
         if self.shoot_cooldown == 0 and self.ammo > 0:
             self.shoot_cooldown = 40
             bullet = Rock(self.rect.centerx + (0.3 *
                           self.rect.size[0] * self.direction), self.rect.centery, self.direction, rock_img)
             bullet_group.add(bullet)
             self.ammo -= 1
-
+            throw_fx.play()
+            
     def check_alive(self):
         if self.health <= 0:
             self.health = 0
@@ -131,7 +135,7 @@ class Character(pygame.sprite.Sprite):
             self.alive = False
             self.update_action(3)
 
-    def ai(self, player, tilesize, gravity, bullet_group, bullet_img, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, level_len, spike_group, bg_scroll, exit_group):
+    def ai(self, player, tilesize, gravity, bullet_group, bullet_img, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, level_len, spike_group, bg_scroll, exit_group, shoot_fx):
         if self.alive and player.alive:
             if self.idling == False and random.randint(1, 200) == 1:
                 self.update_action(0)
@@ -140,7 +144,7 @@ class Character(pygame.sprite.Sprite):
 
             if self.vision.colliderect(player.rect):
                 self.update_action(0)
-                self.shoot(bullet_group, bullet_img)
+                self.shoot(bullet_group, bullet_img, shoot_fx)
             else:
                 if self.idling == False:
                     if self.direction == 1:
