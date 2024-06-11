@@ -54,35 +54,39 @@ class Character(pygame.sprite.Sprite):
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-    def move(self, move_left, move_right, gravity, obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll, bg_scroll, level_len, tilesize, spike_group, exit_group):
+    def move(self, S_W, S_H, tile_size, moving_left, moving_right, gravity, obstacle_list, scroll_thres, bg_scroll, level_len, spike_group, exit_group):
+        screen_scroll = 0
         dx = 0
         dy = 0
-        if move_left:
+
+        if moving_left:
             dx = -self.speed
             self.flip = True
             self.direction = -1
-        if move_right:
+        if moving_right:
             dx = self.speed
             self.flip = False
             self.direction = 1
+
         if self.jump == True and self.in_air == False:
             self.vel_y = -8
             self.jump = False
             self.in_air = True
 
         self.vel_y += gravity
-        if self.vel_y > 10:
+        if self.vel_y > 8:
             self.vel_y
         dy += self.vel_y
-        #Collision
+
         for tile in obstacle_list:
-            #x-axis
+			#x-axis
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                 dx = 0
+				#ai-wall
                 if self.char_type == 'Enemy':
                     self.direction *= -1
                     self.move_counter = 0
-            #y-axis
+			#y-axis
             if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
                 if self.vel_y < 0:
                     self.vel_y = 0
@@ -91,17 +95,18 @@ class Character(pygame.sprite.Sprite):
                     self.vel_y = 0
                     self.in_air = False
                     dy = tile[1].top - self.rect.bottom
-        
+
+
         if pygame.sprite.spritecollide(self, spike_group, False):
             self.health = 0
-        
+
         level_complete = False
         if pygame.sprite.spritecollide(self, exit_group, False):
             level_complete = True
-        
-        if self.rect.bottom  > S_H:
+
+        if self.rect.bottom > S_H:
             self.health = 0
-        
+
         if self.char_type == 'Player':
             if self.rect.left + dx < 0 or self.rect.right + dx > S_W:
                 dx = 0
@@ -110,12 +115,12 @@ class Character(pygame.sprite.Sprite):
         self.rect.y += dy
 
         if self.char_type == 'Player':
-            if (self.rect.right > S_W - Scroll_Thres and bg_scroll < (level_len * tilesize) - S_W)\
-				or (self.rect.left < Scroll_Thres and bg_scroll > abs(dx)):
+            if (self.rect.right > S_W - scroll_thres and bg_scroll < (level_len * tile_size) - S_W)\
+                or (self.rect.left < scroll_thres and bg_scroll > abs(dx)):
                 self.rect.x -= dx
-                Scren_Scroll = -dx
+                screen_scroll = -dx
 
-            return Scren_Scroll, level_complete
+        return screen_scroll, level_complete
 
     def shoot(self, bullet_group, rock_img, throw_fx):
         from Bullet import Rock
@@ -152,8 +157,7 @@ class Character(pygame.sprite.Sprite):
                     else:
                         ai_move_right = False
                     ai_move_left = not ai_move_right
-                    self.move(ai_move_left, ai_move_right, gravity,
-                              obstacle_list, S_W, S_H, Scroll_Thres, Scren_Scroll,bg_scroll, level_len, tilesize, spike_group, exit_group)
+                    self.move(S_W, S_H, tilesize, ai_move_left, ai_move_right, gravity, obstacle_list, Scroll_Thres, bg_scroll, level_len, spike_group, exit_group)
                     self.update_action(2)
                     self.move_counter += 1
 

@@ -3,14 +3,14 @@ from pygame import mixer
 import csv
 from World import world
 from Button import Button
-from ScreenFade import screenfade
+from ScreenFade import ScreenFade
 
 mixer.init()
 pygame.init()
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
-start_game = False
+start_game = False 
 start_intro = False
 move_left, move_right = False, False
 shoot = False
@@ -29,7 +29,7 @@ ROWS = 40
 COLS = 200
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPE = 18
-MAX_LEVELS = 4
+MAX_LEVELS = 3
 level = 1
 
 #Color
@@ -53,15 +53,15 @@ level_up_fx = pygame.mixer.Sound('Sound Effect/level_up.wav')
 level_up_fx.set_volume(0.55)
 game_over_fx = pygame.mixer.Sound('Sound Effect/Game_over.wav')
 game_over_fx.set_volume(0.55)
-throw_fx = pygame.mixer.Sound('Sound Effect/Throw.wav')
-throw_fx.set_volume(0.7)
+throw_fx = pygame.mixer.Sound('Sound Effect/Throw1.wav')
+throw_fx.set_volume(0.4)
 #Menu
 start_img = pygame.image.load('Asset/Menu/Start.png')
 exit_img = pygame.image.load('Asset/Menu/Exit.png')
 restart_img = pygame.image.load('Asset/Menu/Restart.png')
 #Trans
-intro_fade = screenfade(1, FOREST, 5)
-death_fade = screenfade(2, FOREST, 10)
+intro_fade = ScreenFade(1, FOREST, 5)
+death_fade = ScreenFade(2, FOREST, 10)
 #Background
 pine1_img = pygame.image.load('Asset/Background/pine1.png')
 pine2_img = pygame.image.load('Asset/Background/pine2.png')
@@ -73,7 +73,7 @@ font = pygame.font.SysFont('Minecraft', 24)
 def draw_text(text, font, text_col, x, y):
 	img = font.render(text, True, text_col)
 	screen.blit(img, (x, y))
-
+#Background draw
 def draw_bg():
     screen.fill(GREY)
     width = sky_img.get_width()
@@ -98,13 +98,6 @@ def reset_level():
 
     return data
 
-SCALE = 1
-img_list = []
-for x in range(TILE_TYPE):
-    img = pygame.image.load(f'Asset/Tiles/{x}.png')
-    img = pygame.transform.scale(img, ((TILE_SIZE), (TILE_SIZE)))
-    img_list.append(img)
-
 health_box_img = pygame.image.load('Asset/Icons/Heartbox.png').convert_alpha()
 rock_box_img = pygame.image.load('Asset/Icons/Rockbox.png').convert_alpha()
 
@@ -113,9 +106,9 @@ item_boxes = {
     'Rock'      : rock_box_img
 }
 
-start_button = Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 5)
-exit_button = Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, exit_img, 5)
-restart_button = Button(SCREEN_WIDTH // 2 - 110 , SCREEN_HEIGHT // 2 , restart_img, 3)
+start_button = Button(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 150, start_img, 5)
+exit_button = Button(SCREEN_WIDTH // 2 - 135, SCREEN_HEIGHT // 2 + 50, exit_img, 5)
+restart_button = Button(SCREEN_WIDTH // 2 - 160 , SCREEN_HEIGHT // 2 - 48 , restart_img, 4)
 
 rock_img = pygame.image.load('Asset/Icons/Rock.png').convert_alpha()
 heart_img = pygame.image.load('Asset/Icons/Heart.png').convert_alpha()
@@ -125,7 +118,13 @@ item_box_group = pygame.sprite.Group()
 decs_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 spike_group = pygame.sprite.Group()
-
+#Map
+img_list = []
+for x in range(TILE_TYPE):
+    img = pygame.image.load(f'Asset/Tiles/{x}.png')
+    img = pygame.transform.scale(img, ((TILE_SIZE), (TILE_SIZE)))
+    img_list.append(img)
+    
 world_data = []
 for row in range(ROWS):
     r = [-1]*COLS
@@ -193,10 +192,11 @@ while run:
                 player.update_action(2)
             else:
                 player.update_action(0)
-            screen_scroll, level_complete = player.move(move_left, move_right, GRAVITY, Environment.obstacle_list, SCREEN_WIDTH, SCREEN_HEIGHT, SCROLL_THRESH, screen_scroll, bg_scroll, Environment.level_len, TILE_SIZE, spike_group, exit_group)
+            screen_scroll, level_complete = player.move(SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, move_left, move_right, GRAVITY, Environment.obstacle_list, SCROLL_THRESH, bg_scroll, Environment.level_len, spike_group, exit_group)
             bg_scroll -= screen_scroll
+            
             if level_complete:
-                start_intro =True
+                start_intro = True
                 level+=1
                 bg_scroll = 0
                 world_data = reset_level()
@@ -207,24 +207,24 @@ while run:
                             for y, tile in enumerate(row):
                                 world_data[x][y] = int(tile)
 
-                Environment = world()
-                player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group) 
+                    Environment = world()
+                    player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group) 
             
         else:
-            screen_scroll = 0
-            if death_fade.fade(screen, SCREEN_WIDTH, SCREEN_HEIGHT):
-                if restart_button.draw(screen):
-                    death_fade.fade_count = 0
-                    bg_scroll = 0
-                    world_data = reset_level() 
-                    with open(f'Levels/level{level}_data.csv', newline='') as csvfile:
-                        reader = csv.reader(csvfile, delimiter = ',')
-                        for x, row in enumerate(reader):
-                            for y, tile in enumerate(row):
-                                world_data[x][y] = int(tile)
+                screen_scroll = 0
+                if death_fade.fade(screen, SCREEN_WIDTH, SCREEN_HEIGHT):
+                    if restart_button.draw(screen):
+                        death_fade.fade_count = 0
+                        bg_scroll = 0
+                        world_data = reset_level() 
+                        with open(f'Levels/level{level}_data.csv', newline='') as csvfile:
+                            reader = csv.reader(csvfile, delimiter = ',')
+                            for x, row in enumerate(reader):
+                                for y, tile in enumerate(row):
+                                    world_data[x][y] = int(tile)
 
-                    Environment = world()
-                    player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group)          
+                        Environment = world()
+                        player, health_bar = Environment.process_data(world_data, img_list, TILE_SIZE, enemy_group, item_box_group, item_boxes, decs_group, exit_group, spike_group)          
                     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
